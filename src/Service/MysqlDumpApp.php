@@ -102,7 +102,7 @@ class MysqlDumpApp
     {
         $password = '';
         if ($p = Config::get('database.connections.mysql.password'))
-            $password = ' -p' . $p;
+            $password = ' -p' . "\"" . $p . "\"";
 
         $zip = '';
         if(Config::get('mysql_dump.compress')) {
