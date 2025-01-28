@@ -83,9 +83,8 @@ class MysqlDumpApp
         $zip = Config::get('mysql_dump.compress') ? ' | gzip' : '';
 
         $command = $mysqldumpPath .
-            ' -u ' . Config::get('database.connections.mysql.username') .
-            $password .
-            ' -t ' .
+            ' -u ' . Config::get('database.connections.mysql.username') 
+            . '\"' . $password . '\" -t ' .
             Config::get('database.connections.mysql.database') .
             $zip .
             ' > ' .
