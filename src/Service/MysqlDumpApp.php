@@ -23,7 +23,7 @@ class MysqlDumpApp
         $this->tmpFolderPath = Config::get('mysql_dump.tmp_path');
         $this->separator = Config::get('mysql_dump.separator');
         $this->extension = Config::get('mysql_dump.compress') ? '.sql.gz' : '.sql';
-        $this->name = date(Config::get('mysql_dump.dump_name')) . $this->extension;
+        $this->name = date(Config::get('mysql_dump.dump_name'));
         $this->path = $this->tmpFolderPath .
             $this->separator .
             $this->name .
