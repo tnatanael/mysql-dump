@@ -1,5 +1,5 @@
 {
-    "name": "lexuses/mysql-dump",
+    "name": "tnatanael/mysql-dump",
     "description": "Laravel 5+ package for auto dump mysql database to local storage or to cloud",
     "keywords": ["laravel", "mysql", "dump", "s3"],
     "license": "MIT",
