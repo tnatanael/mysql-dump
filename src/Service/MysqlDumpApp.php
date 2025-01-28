@@ -85,8 +85,8 @@ class MysqlDumpApp
         $command = $mysqldumpPath .
             ' -u ' . Config::get('database.connections.mysql.username') . 
             $password . 
-            ' -t ' .
-            Config::get('database.connections.mysql.database') .
+            // ' -t ' .
+            // Config::get('database.connections.mysql.database') .
             $zip .
             ' > ' .
             $path;
