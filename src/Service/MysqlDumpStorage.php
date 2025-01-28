@@ -20,12 +20,14 @@ class MysqlDumpStorage
     protected $system;
     protected $dumpDir;
     protected $path;
+    protected $extension;
 
     public function __construct($storageName)
     {
         $this->storageName = $storageName;
         $this->storage = $this->getStorage($storageName);
         $this->system = Config::get('filesystems.disks.' . $this->storage['disk']);
+        $this->extension = Config::get('mysql_dump.compress') ? '.sql.gz' : '.sql';
 
         if(!$this->system)
             throw new \Exception('Disk not found in filesystems.php');
@@ -64,7 +66,8 @@ class MysqlDumpStorage
             return implode($this->separator, [
                 $this->system['root'],
                 $this->path,
-                $dumpName
+                $dumpName,
+                $this->extension
             ]);
 
         return $this->path . $this->separator . $dumpName;
