@@ -95,8 +95,7 @@ class MysqlDumpModel
         $separator = Config::get('mysql_dump.separator');
 
         if($this->isLocal()) {
-            return $this->getDriver()->getAdapter()->getPathPrefix() .
-                str_replace('/', '\\', $this->path);
+            return Storage::disk($this->disk)->path($this->path);
         }
 
         //If dump in cloud lets download it
