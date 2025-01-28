@@ -66,8 +66,7 @@ class MysqlDumpStorage
             return implode($this->separator, [
                 $this->system['root'],
                 $this->path,
-                $dumpName,
-                $this->extension
+                $dumpName . $this->extension
             ]);
 
         return $this->path . $this->separator . $dumpName;
