@@ -78,13 +78,13 @@ class MysqlDumpApp
 
         $password = '';
         if ($p = Config::get('database.connections.mysql.password'))
-            $password = ' -p' . $p;
+            $password = ' -p' . "\"" . $p . "\"";
 
         $zip = Config::get('mysql_dump.compress') ? ' | gzip' : '';
 
         $command = $mysqldumpPath .
-            ' -u ' . Config::get('database.connections.mysql.username') 
-            . "\"" . $password . "\"" . 
+            ' -u ' . Config::get('database.connections.mysql.username') . 
+            $password . 
             ' -t ' .
             Config::get('database.connections.mysql.database') .
             $zip .
