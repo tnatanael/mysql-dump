@@ -14,6 +14,7 @@ class MysqlDumpModel
     protected $name;
     protected $timestamp;
     protected $disk;
+    protected $extension;
 
     /**
      * MysqlDumpModel constructor.
@@ -25,6 +26,7 @@ class MysqlDumpModel
         $this->path = $path;
         $this->name = basename($path);
         $this->disk = $disk;
+        $this->extension = Config::get('mysql_dump.compress') ? '.sql.gz' : '.sql';
     }
 
     public function getName()

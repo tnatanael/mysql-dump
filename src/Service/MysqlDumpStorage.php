@@ -69,7 +69,7 @@ class MysqlDumpStorage
                 $dumpName . $this->extension
             ]);
 
-        return $this->path . $this->separator . $dumpName;
+        return $this->path . $this->separator . $dumpName . $this->extension;
     }
 
     /**
