@@ -106,6 +106,9 @@ class MysqlDumpModel
         $path = $tempFolder.$separator.$dumpName;
         @unlink($path);
 
+        if (!file_exists(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
         $tempFile = fopen($path, 'ab');
 
         $handle = $fs->readStream($this->getPath());
