@@ -117,8 +117,8 @@ class MysqlDumpApp
             Config::get('mysql_dump.mysql_app') .
             ' -u ' . Config::get('database.connections.mysql.username') .
             $password .
-            ' ' .
-            Config::get('database.connections.mysql.database') .
+            // ' ' .
+            // Config::get('database.connections.mysql.database') .
             $after;
 
         try{
