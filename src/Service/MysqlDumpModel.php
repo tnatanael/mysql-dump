@@ -52,7 +52,7 @@ class MysqlDumpModel
 
     public function getMeta($property = null)
     {
-        $meta = $this->getDriver()->getMetadata($this->path);
+        $meta = json_decode(Storage::disk($this->disk)->get($this->path), true);
         if( ! $property)
             return $meta;
 
