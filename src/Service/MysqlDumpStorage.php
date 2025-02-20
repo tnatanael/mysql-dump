@@ -128,7 +128,7 @@ class MysqlDumpStorage
             if($filteredDumps->count() > $value){
                 // Take from filtered dumps the oldest dump
                 $oldestDump = $filteredDumps->sortBy(function($model){
-                    return $model->getLastModified();
+                    return Carbon::createFromFormat('Y_m_d_H_i_s', str_replace('.sql.gz', '', $model->getFileName()))->getTimestamp();
                 })->first();
 
                 // Delete dump
