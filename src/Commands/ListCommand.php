@@ -72,41 +72,52 @@ class ListCommand extends Command
         }
 
         $storage = new MysqlDumpStorage($storage);
-        $list = $storage->getDumpList()
-            ->groupBy(function(MysqlDumpModel $dump){
-                $date = Carbon::createFromTimestamp($dump->getLastModified());
-                return $date->year;
-            })
-            ->mapWithKeys(function($dumps, $year){
-                return [$year => $dumps->groupBy(function(MysqlDumpModel $dump){
-                    $date = Carbon::createFromTimestamp($dump->getLastModified());
-                    return $date->month;
-                })->mapWithKeys(function($dumps, $month){
-                    return [$month => $dumps->groupBy(function(MysqlDumpModel $dump){
-                        $date = Carbon::createFromTimestamp($dump->getLastModified());
-                        return $date->day;
-                    })];
-                })];
+        $dumps = $storage->getDumpList();
+        
+        // First level grouping - by year
+        $list = $dumps->groupBy(function(MysqlDumpModel $dump) {
+            return Carbon::createFromTimestamp($dump->getLastModified())->format('Y');
+        })->map(function($yearGroup) {
+            // Second level - by month
+            return $yearGroup->groupBy(function(MysqlDumpModel $dump) {
+                return Carbon::createFromTimestamp($dump->getLastModified())->format('m');
+            })->map(function($monthGroup) {
+                // Third level - by day
+                return $monthGroup->groupBy(function(MysqlDumpModel $dump) {
+                    return Carbon::createFromTimestamp($dump->getLastModified())->format('d');
+                });
             });
+        });
 
         $this->showList($list, 0, 0);
     }
 
     public function showList($array, $tabTimes, $periodIndex)
     {
-        $periods =  ['year', 'month', 'day', 'list'];
+        $periods = ['year', 'month', 'day', 'list'];
         $period = $periods[$periodIndex];
         $periodIndex++;
         $tabText = str_repeat(' ', $tabTimes);
 
-        foreach ($array as $key => $dump){
-            if($dump instanceof MysqlDumpModel){
-                $this->info(str_repeat(' ', $tabTimes). ($key+1) . ') ' . $dump->getName());
+        foreach ($array as $key => $items) {
+            if ($items instanceof MysqlDumpModel) {
+                $this->info($tabText . ($key+1) . ') ' . $items->getName());
                 continue;
             }
 
-            /** @var MysqlDumpModel $firstDump */
-            $firstDump = $dump->first();
+            // Get the first dump from the group to determine the date
+            $firstDump = $items->first();
+            if ($firstDump instanceof Collection) {
+                $firstDump = $firstDump->first();
+                if ($firstDump instanceof Collection) {
+                    $firstDump = $firstDump->first();
+                }
+            }
+
+            if (!($firstDump instanceof MysqlDumpModel)) {
+                continue;
+            }
+
             $date = Carbon::createFromTimestamp($firstDump->getLastModified());
             $title = match($period) {
                 'year' => $date->format('Y'),
@@ -114,9 +125,10 @@ class ListCommand extends Command
                 'day' => $date->format('F jS'),
             };
 
-            $this->line($tabText."-- $title --".$tabText);
-            if($dump instanceof Collection){
-                $this->showList($dump, $tabTimes+6, $periodIndex);
+            $this->line($tabText . "-- $title --");
+            
+            if ($items instanceof Collection) {
+                $this->showList($items, $tabTimes + 6, $periodIndex);
             }
         }
     }
