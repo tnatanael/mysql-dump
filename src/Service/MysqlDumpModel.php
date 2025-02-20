@@ -45,14 +45,16 @@ class MysqlDumpModel
         if ($this->timestamp === null) {
             $filename = str_replace('.sql', '', $this->getName());
             $filename = str_replace('.gz', '', $filename);
-            $this->timestamp = Carbon::createFromFormat('Y-m-d_H-i-s', $filename)->getTimestamp();
+            // Parse the date in UTC to match the backup creation time
+            $this->timestamp = Carbon::createFromFormat('Y-m-d_H-i-s', $filename, 'UTC')->getTimestamp();
         }
         return $this->timestamp;
     }
 
     public function getTime()
     {
-        return Carbon::createFromTimestamp($this->getLastModified());
+        // Create Carbon instance in UTC to match the backup creation time
+        return Carbon::createFromTimestamp($this->getLastModified(), 'UTC');
     }
 
     public function getMeta($property = null)
