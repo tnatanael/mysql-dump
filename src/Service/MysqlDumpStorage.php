@@ -120,9 +120,7 @@ class MysqlDumpStorage
         // Get all periods and its values from config
         $periods = new Collection(Config::get('mysql_dump.max_dumps'));
         // Filter periods that has value more than zero
-        $periods->filter(function($value){
-            return $value;
-        })->each(function($value, $period) use ($dumps){
+        $periods->sortKeys()->each(function($value, $period) use ($dumps){
             // Count dumps by period
             $filteredDumps = $this->countBy($dumps, $period);
 
