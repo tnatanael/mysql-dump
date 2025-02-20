@@ -102,7 +102,7 @@ class ListCommand extends Command
                 continue;
             }
 
-            $firstDate = $dump->first()->getCreatedAt();
+            $firstDate = $dump->first()->getTime();
             $title = match($period) {
                 'year' => $firstDate->format('Y'),
                 'month' => $firstDate->format('F Y'),
