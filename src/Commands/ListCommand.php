@@ -73,15 +73,18 @@ class ListCommand extends Command
 
         $storage = new MysqlDumpStorage($storage);
         $list = $storage->getDumpList()
-            ->groupBy(function($dump){
-                return Carbon::createFromTimestamp($dump->getLastModified())->year;
+            ->groupBy(function(MysqlDumpModel $dump){
+                $date = Carbon::createFromTimestamp($dump->getLastModified());
+                return $date->year;
             })
             ->mapWithKeys(function($dumps, $year){
-                return [$year => $dumps->groupBy(function($dump){
-                    return Carbon::createFromTimestamp($dump->getLastModified())->month;
+                return [$year => $dumps->groupBy(function(MysqlDumpModel $dump){
+                    $date = Carbon::createFromTimestamp($dump->getLastModified());
+                    return $date->month;
                 })->mapWithKeys(function($dumps, $month){
-                    return [$month => $dumps->groupBy(function($dump){
-                        return Carbon::createFromTimestamp($dump->getLastModified())->day;
+                    return [$month => $dumps->groupBy(function(MysqlDumpModel $dump){
+                        $date = Carbon::createFromTimestamp($dump->getLastModified());
+                        return $date->day;
                     })];
                 })];
             });
@@ -102,11 +105,13 @@ class ListCommand extends Command
                 continue;
             }
 
-            $firstDate = Carbon::createFromTimestamp($dump->first()->getLastModified());
+            /** @var MysqlDumpModel $firstDump */
+            $firstDump = $dump->first();
+            $date = Carbon::createFromTimestamp($firstDump->getLastModified());
             $title = match($period) {
-                'year' => $firstDate->format('Y'),
-                'month' => $firstDate->format('F Y'),
-                'day' => $firstDate->format('F jS'),
+                'year' => $date->format('Y'),
+                'month' => $date->format('F Y'),
+                'day' => $date->format('F jS'),
             };
 
             $this->line($tabText."-- $title --".$tabText);
