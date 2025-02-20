@@ -19,7 +19,7 @@ class DropCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Create dump and save it. Check config file for more information.';
+    protected $description = 'Drop current database. Check config file for more information.';
     /**
      * @var MysqlDumpService
      */

@@ -114,25 +114,29 @@ class MysqlDumpStorage
 
     public function checkMaxDumps()
     {
+        // Get all dumps from storage
         $dumps = $this->getDumpList();
 
+        // Get all periods and its values from config
         $periods = new Collection(Config::get('mysql_dump.max_dumps'));
+        // Filter periods that has value more than zero
         $periods->filter(function($value){
             return $value;
         })->each(function($value, $period) use ($dumps){
-
+            // Count dumps by period
             $filteredDumps = $this->countBy($dumps, $period);
 
+            // If count of dumps more than value in config
             if($filteredDumps->count() > $value){
-                $filteredDumps
-                    ->take($filteredDumps->count() - $value)
-                    ->each(function($dump, $key) use ($dumps){
-                        /** @var MysqlDumpModel $dump */
-                        $dump->delete();
-                        $dumps->forget($key);
-                    });
-            }
+                // Take from filtered dumps the oldest dump
+                $oldestDump = $filteredDumps->sortBy(function($model){
+                    return $model->getLastModified();
+                })->first();
 
+                // Delete dump
+                /** @var MysqlDumpModel $oldestDump */
+                $oldestDump->delete();
+            }
         });
     }
 

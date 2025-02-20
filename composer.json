@@ -23,5 +23,8 @@
                 "Lexuses\\MysqlDump\\MysqlDumpServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "illuminate/console": "^11.43"
     }
 }
