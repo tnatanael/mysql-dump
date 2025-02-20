@@ -102,12 +102,12 @@ class ListCommand extends Command
                 continue;
             }
 
-            if($period == 'month'){
-                $title = Carbon::now()->month($key)->format('F');
-            }
-            else{
-                $title = $key;
-            }
+            $firstDate = $dump->first()->getCreatedAt();
+            $title = match($period) {
+                'year' => $firstDate->format('Y'),
+                'month' => $firstDate->format('F Y'),
+                'day' => $firstDate->format('F jS'),
+            };
 
             $this->line($tabText."-- $title --".$tabText);
             if($dump instanceof Collection){
