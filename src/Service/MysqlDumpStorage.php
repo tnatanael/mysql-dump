@@ -116,24 +116,74 @@ class MysqlDumpStorage
     {
         // Get all dumps from storage
         $dumps = $this->getDumpList();
-
-        // Get all periods and its values from config
-        $periods = new Collection(Config::get('mysql_dump.max_dumps'));
-        // Filter periods that has value more than zero
-        $periods->sortKeys()->each(function($value, $period) use ($dumps){
-            // Count dumps by period
-            $filteredDumps = $this->countBy($dumps, $period);
-
-            // If count of dumps more than value in config
-            if($filteredDumps->count() > $value){
-                // Take from filtered dumps the oldest dump
-                $oldestDump = $filteredDumps->sortBy(function($model){
-                    return $model->getLastModified();
-                })->first();
-
-                // Delete dump
-                /** @var MysqlDumpModel $oldestDump */
-                $oldestDump->delete();
+        $now = Carbon::now('UTC');
+        
+        // Step 1: Day rule - Keep only most recent backup per day
+        $byDay = $dumps->groupBy(function(MysqlDumpModel $dump) {
+            return Carbon::createFromTimestamp($dump->getLastModified(), 'UTC')->format('Y-m-d');
+        });
+        
+        $toKeep = new Collection();
+        
+        foreach ($byDay as $dayDumps) {
+            // Keep most recent backup for each day
+            $toKeep->push($dayDumps->sortByDesc(function($dump) {
+                return $dump->getLastModified();
+            })->first());
+        }
+        
+        // Step 2: Week rule - Keep backups for last 7 days
+        $weekCutoff = $now->copy()->subDays(7);
+        $weekBackups = $toKeep->filter(function($dump) use ($weekCutoff) {
+            return Carbon::createFromTimestamp($dump->getLastModified(), 'UTC')->greaterThanOrEqualTo($weekCutoff);
+        });
+        
+        // Step 3: Month rule - Keep 1 backup per month for last 12 months
+        $monthCutoff = $now->copy()->subMonths(12);
+        $byMonth = $toKeep->filter(function($dump) use ($weekCutoff, $monthCutoff) {
+            $dumpDate = Carbon::createFromTimestamp($dump->getLastModified(), 'UTC');
+            return $dumpDate->lessThan($weekCutoff) && $dumpDate->greaterThanOrEqualTo($monthCutoff);
+        })->groupBy(function($dump) {
+            return Carbon::createFromTimestamp($dump->getLastModified(), 'UTC')->format('Y-m');
+        });
+        
+        $monthBackups = new Collection();
+        foreach ($byMonth as $monthDumps) {
+            // Keep the most recent backup for each month
+            $monthBackups->push($monthDumps->sortByDesc(function($dump) {
+                return $dump->getLastModified();
+            })->first());
+        }
+        
+        // Step 4: Year rule - Keep 1 backup per year for anything older
+        $byYear = $toKeep->filter(function($dump) use ($monthCutoff) {
+            return Carbon::createFromTimestamp($dump->getLastModified(), 'UTC')->lessThan($monthCutoff);
+        })->groupBy(function($dump) {
+            return Carbon::createFromTimestamp($dump->getLastModified(), 'UTC')->format('Y');
+        });
+        
+        $yearBackups = new Collection();
+        foreach ($byYear as $yearDumps) {
+            // Keep the most recent backup for each year
+            $yearBackups->push($yearDumps->sortByDesc(function($dump) {
+                return $dump->getLastModified();
+            })->first());
+        }
+        
+        // Combine all backups to keep
+        $finalKeepList = $weekBackups
+            ->concat($monthBackups)
+            ->concat($yearBackups)
+            ->unique(function($dump) {
+                return $dump->getPath();
+            });
+            
+        // Delete backups not in the keep list
+        $dumps->each(function($dump) use ($finalKeepList) {
+            if (!$finalKeepList->contains(function($keep) use ($dump) {
+                return $keep->getPath() === $dump->getPath();
+            })) {
+                $dump->delete();
             }
         });
 
