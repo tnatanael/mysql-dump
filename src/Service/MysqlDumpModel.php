@@ -4,9 +4,10 @@ namespace Lexuses\MysqlDump\Service;
 
 use Carbon\Carbon;
 use Closure;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\File;
+use League\Flysystem\UnableToRetrieveMetadata;
 
 class MysqlDumpModel
 {
@@ -41,13 +42,17 @@ class MysqlDumpModel
 
     public function getLastModified()
     {
-        $this->timestamp = Storage::disk($this->disk)->lastModified($this->path);
+        if ($this->timestamp === null) {
+            $filename = str_replace('.sql', '', $this->getName());
+            $filename = str_replace('.gz', '', $filename);
+            $this->timestamp = Carbon::createFromFormat('Y-m-d_H-i-s', $filename)->getTimestamp();
+        }
         return $this->timestamp;
     }
 
     public function getTime()
     {
-        return Carbon::createFromTimestamp($this->timestamp);
+        return Carbon::createFromTimestamp($this->getLastModified());
     }
 
     public function getMeta($property = null)
@@ -61,7 +66,7 @@ class MysqlDumpModel
 
     public function getDriver()
     {
-        return Storage::disk($this->disk)->getDriver();
+        return Config::get('filesystems.disks.' . $this->disk . '.driver');
     }
 
     public function isLocal()

@@ -52,7 +52,11 @@ class ListCommand extends Command
         $storage = $this->option('storage');
 
         if(!$storage){
-            $storage = $this->choice('Choose storage:', array_keys(Config::get('mysql_dump.storage')));
+            $storages = array_keys(Config::get('mysql_dump.storage'));
+
+            $storage = count($storages) == 1
+                ? $storages[0]
+                : $this->choice('Choose storage:', $storages);
         }
 
         if(!$this->service->getStorages($storage)){

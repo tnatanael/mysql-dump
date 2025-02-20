@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "php": ">=5.5.9"
+        "php": ">=5.5.9",
+        "illuminate/http": "^11.43"
     },
     "autoload": {
         "psr-4": {
@@ -25,6 +26,7 @@
         }
     },
     "require-dev": {
-        "illuminate/console": "^11.43"
+        "illuminate/console": "^11.43",
+        "league/flysystem": "^3.29"
     }
 }

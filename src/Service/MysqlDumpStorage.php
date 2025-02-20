@@ -128,9 +128,7 @@ class MysqlDumpStorage
             if($filteredDumps->count() > $value){
                 // Take from filtered dumps the oldest dump
                 $oldestDump = $filteredDumps->sortBy(function($model){
-                    $filename = str_replace('.sql', '', $model->getName());
-                    $filename = str_replace('.gz', '', $filename);
-                    return Carbon::createFromFormat('Y-m-d_H-i-s', $filename)->getTimestamp();
+                    return $model->getLastModified();
                 })->first();
 
                 // Delete dump
@@ -138,6 +136,33 @@ class MysqlDumpStorage
                 $oldestDump->delete();
             }
         });
+
+        // Clean up empty folders after deleting dumps
+        $this->cleanEmptyFolders();
+    }
+
+    /**
+     * Remove empty folders in the storage path
+     */
+    protected function cleanEmptyFolders()
+    {
+        $disk = Storage::disk($this->storage['disk']);
+        $basePath = $this->storage['path'];
+        
+        // Get all directories
+        $directories = $disk->allDirectories($basePath);
+        
+        // Sort directories by depth (deepest first)
+        usort($directories, function($a, $b) {
+            return substr_count($b, '/') - substr_count($a, '/');
+        });
+        
+        foreach ($directories as $directory) {
+            // If directory has no files and no subdirectories
+            if (empty($disk->files($directory)) && empty($disk->directories($directory))) {
+                $disk->deleteDirectory($directory);
+            }
+        }
     }
 
     public function countBy(Collection $dumps, $period)
