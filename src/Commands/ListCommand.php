@@ -74,14 +74,14 @@ class ListCommand extends Command
         $storage = new MysqlDumpStorage($storage);
         $list = $storage->getDumpList()
             ->groupBy(function($dump){
-                return $dump->getTime()->year;
+                return Carbon::createFromTimestamp($dump->getLastModified())->year;
             })
             ->mapWithKeys(function($dumps, $year){
                 return [$year => $dumps->groupBy(function($dump){
-                    return $dump->getTime()->month;
+                    return Carbon::createFromTimestamp($dump->getLastModified())->month;
                 })->mapWithKeys(function($dumps, $month){
                     return [$month => $dumps->groupBy(function($dump){
-                        return $dump->getTime()->day;
+                        return Carbon::createFromTimestamp($dump->getLastModified())->day;
                     })];
                 })];
             });
@@ -102,7 +102,7 @@ class ListCommand extends Command
                 continue;
             }
 
-            $firstDate = $dump->first()->getTime();
+            $firstDate = Carbon::createFromTimestamp($dump->first()->getLastModified());
             $title = match($period) {
                 'year' => $firstDate->format('Y'),
                 'month' => $firstDate->format('F Y'),
