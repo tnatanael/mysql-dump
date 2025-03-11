@@ -71,6 +71,16 @@ class MysqlDumpModel
         return Config::get('filesystems.disks.' . $this->disk . '.driver');
     }
 
+    /**
+     * Get the filesystem instance for the current disk
+     * 
+     * @return \Illuminate\Contracts\Filesystem\Filesystem
+     */
+    public function getFilesystem()
+    {
+        return Storage::disk($this->disk);
+    }
+
     public function isLocal()
     {
         $system = Config::get('filesystems.disks.' . $this->disk);
@@ -108,7 +118,7 @@ class MysqlDumpModel
         }
 
         //If dump in cloud lets download it
-        $fs = $this->getDriver();
+        $filesystem = $this->getFilesystem();
         $dumpName = basename($this->path);
         $path = $tempFolder.$separator.$dumpName;
         @unlink($path);
@@ -118,7 +128,7 @@ class MysqlDumpModel
         }
         $tempFile = fopen($path, 'ab');
 
-        $handle = $fs->readStream($this->getPath());
+        $handle = $filesystem->readStream($this->getPath());
         while (($buffer = fgets($handle, $readLength)) !== false) {
             fwrite($tempFile, $buffer);
             if($callbackDownload AND $callbackDownload instanceof Closure) {
